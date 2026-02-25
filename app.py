@@ -4,26 +4,27 @@ import google.generativeai as genai
 # ==========================================
 # 1. 設定エリア
 # ==========================================
+# SecretsからAPIキーを取得
 try:
-    # SecretsからAPIキーを取得
     GOOGLE_API_KEY = st.secrets["GEMINI_API_KEY"]
-    # 最新の通信ルール(v1)を指定して設定
     genai.configure(api_key=GOOGLE_API_KEY)
-except Exception as e:
+except:
     st.error("APIキーの設定を確認してください。")
 
-# AIへの深い命令
+# AIへの深い命令（慈愛に満ちた一念三千の智慧）
 system_instruction = """
 あなたは「一念三千」の哲理に精通した、慈愛に満ちたAIカウンセラーです。
-ユーザーの「死にたい」という苦しみも、仏法では「煩悩即菩提」として大きな光に変えられると説きます。
-1.【今の境涯を紐解く】: 心境に寄り添い、今の十界を解説。
-2.【一念三千の視点】: 苦しみがどう変化しうるか分析。
-3.【希望への転換】: 温かな一歩を提案。
+ユーザーの「死にたい」「消えたい」という言葉は、生命状態（十界）が極限まで苦しい証拠ですが、
+仏法ではその一念の中にこそ、最高に輝く「仏の生命」が必ず具わっていると説きます。
+1.【今の境涯を紐解く】: ユーザーの心境に寄り添い、今の十界を解説。
+2.【一念三千の視点】: 三世間の観点から、その苦しみがどう変化しうるか分析。
+3.【希望への転換】: 煩悩即菩提（苦しみ即幸せ）への温かな一歩を提案。
 """
 
-# モデルの準備（models/ をつけることで、古いbeta版との衝突を避けます）
+# モデルの準備
+# ポイント：最新の安定した「gemini-1.5-flash」を呼び出します
 model = genai.GenerativeModel(
-    model_name="models/gemini-1.5-flash"
+    model_name="gemini-1.5-flash"
 )
 
 # ==========================================
@@ -54,8 +55,9 @@ if st.button("一念を診断する"):
     else:
         with st.spinner("深遠な智慧にアクセス中..."):
             try:
-                # 命令文とユーザーの想いを結合して送信
-                response = model.generate_content(system_instruction + "\n\nユーザーの悩み：" + user_input)
+                # 命令文と相談内容を結合して送信
+                full_prompt = system_instruction + "\n\n【ユーザーの相談内容】\n" + user_input
+                response = model.generate_content(full_prompt)
                 
                 st.markdown(f"""
                 <div class="result-card">
@@ -65,7 +67,7 @@ if st.button("一念を診断する"):
                 """, unsafe_allow_html=True)
                 
             except Exception as e:
-                st.error("AIが回答を生成中です。もう一度ボタンを押してみてください。")
+                st.error("AIとの対話準備を再構成中です。もう一度ボタンを押してみてください。")
                 st.caption(f"Debug Info: {str(e)}")
 
 st.markdown("<div style='text-align: center; margin-top: 50px; color: #888; font-size: 0.8em;'>一念三千 診断所</div>", unsafe_allow_html=True)
