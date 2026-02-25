@@ -24,10 +24,14 @@ system_instruction = """
 """
 
 # モデルの準備
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    system_instruction=system_instruction
-)
+try:
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash-latest",  # "latest"をつけるとうまくいくことが多いです
+        system_instruction=system_instruction
+    )
+except:
+    # 万が一FlashがダメならProに切り替える保険
+    model = genai.GenerativeModel("gemini-pro")
 
 # ==========================================
 # 2. デザイン（癒やしの空間）
