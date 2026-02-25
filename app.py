@@ -20,7 +20,7 @@ system_instruction = """
 """
 
 # モデル設定
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-1.5-flash-latest")
 
 # ==========================================
 # 2. デザイン（CSS）の魔法をかけるエリア
