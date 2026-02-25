@@ -4,37 +4,43 @@ import google.generativeai as genai
 # ==========================================
 # 1. 設定エリア
 # ==========================================
-# Streamlit CloudのSecretsからAPIキーを読み込みます
+# SecretsからAPIキーを取得
 try:
     GOOGLE_API_KEY = st.secrets["GEMINI_API_KEY"]
+    # 接続を安定させるための初期設定
     genai.configure(api_key=GOOGLE_API_KEY)
 except Exception as e:
-    st.error("APIキーが設定されていません。Secretsの設定を確認してください。")
+    st.error("APIキーの設定を確認してください。")
 
-# システム命令
+# AIへの深い命令（一念三千の智慧）
 system_instruction = """
-あなたは「一念三千」の深遠な哲理に基づき、ユーザーの悩みを救うAIメンタルカウンセラーです。
-以下の3ステップで誠実に回答してください。
-1.【生命境涯（十界）】: 現在の心が十界のどこにあるか判定し、解説。
-2.【一念三千の分析】: 仏法の観点から現状を分析。
-3.【境地転換のアドバイス】: 前向きなアクションを提案。
+あなたは「一念三千」の哲理に精通した、慈愛に満ちたAIカウンセラーです。
+ユーザーの「死にたい」「消えたい」という言葉は、現在の生命状態（十界）が極限まで苦しい証拠ですが、
+仏法ではその一念の中にこそ、最高に輝く「仏の生命」が必ず具わっていると説きます。
+以下の構成で、ユーザーの心に灯をともすような対話を行ってください。
+1.【今の境涯を紐解く】: ユーザーの心境が十界のどこにあるか寄り添いながら解説。
+2.【一念三千の視点】: その苦しみがどう変化しうるか、三世間の観点から分析。
+3.【希望への転換】: 煩悩即菩提（苦しみ即幸せ）への具体的な一歩を提案。
 """
 
-# モデルの設定（もっとも確実な呼び出し方に固定）
-# ポイント：models/ をつけることで、古い通信ルール(v1beta)との衝突を避けます
-model = genai.GenerativeModel(model_name="models/gemini-1.5-flash")
+# モデルの準備
+# ポイント：最新の安定した「gemini-1.5-flash」を、正式な通信ルールで使用します
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    system_instruction=system_instruction
+)
 
 # ==========================================
-# 2. デザイン（CSS）
+# 2. デザイン（和モダン・癒やしの空間）
 # ==========================================
 st.set_page_config(page_title="一念三千 診断", page_icon="🧘")
 
 st.markdown("""
     <style>
     .stApp { background: linear-gradient(135deg, #0f2027 0%, #203a43 100%); color: white; }
-    h1 { color: #f8b500 !important; text-align: center; }
-    .stButton>button { background-color: #d3381c !important; color: white !important; width: 100%; border-radius: 20px; border: none; }
-    .result-card { background-color: rgba(0, 0, 0, 0.6); padding: 20px; border-radius: 15px; border-left: 5px solid #f8b500; }
+    h1 { color: #f8b500 !important; text-align: center; font-size: 2.5em; text-shadow: 0 0 10px rgba(248,181,0,0.5); }
+    .stButton>button { background-color: #d3381c !important; color: white !important; width: 100%; border-radius: 20px; border: none; height: 3em; font-weight: bold; }
+    .result-card { background-color: rgba(255, 255, 255, 0.1); padding: 25px; border-radius: 15px; border-left: 5px solid #f8b500; backdrop-filter: blur(10px); }
     </style>
 """, unsafe_allow_html=True)
 
@@ -43,27 +49,30 @@ st.markdown("""
 # ==========================================
 st.title("🧘 一念三千 診断")
 
-user_input = st.text_area("今の心境を入力してください", height=120, placeholder="例：死にそうです！仕事が本当につらい...")
+st.markdown("<div style='text-align: center; margin-bottom: 20px;'>あなたの内なる三千世界を、AIが照らし出します。</div>", unsafe_allow_html=True)
+
+user_input = st.text_area("今の心境を教えてください", height=150, placeholder="ここにあなたの想いを書き出してください...")
 
 if st.button("一念を診断する"):
     if not user_input:
-        st.warning("心境を入力してください。")
+        st.warning("お気持ちを入力してください。")
     else:
-        with st.spinner("曼荼羅を解析中..."):
+        with st.spinner("深遠な智慧にアクセス中..."):
             try:
-                # 回答を生成（システム命令を結合）
-                response = model.generate_content(system_instruction + "\n\nユーザーの悩み：" + user_input)
+                # 対話の生成
+                response = model.generate_content(user_input)
                 
                 st.markdown(f"""
                 <div class="result-card">
-                    <h3 style="color:#f8b500;">診断結果</h3>
-                    <div style="line-height: 1.8;">{response.text.replace(chr(10), "<br>")}</div>
+                    <h3 style="color:#f8b500; margin-top:0;">診断結果</h3>
+                    <div style="line-height: 1.8; font-size: 1.1em;">{response.text.replace(chr(10), "<br>")}</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
             except Exception as e:
-                # もしエラーが出ても、原因がわかるように詳細を表示します
-                st.error("AIとの接続でエラーが発生しました。")
-                st.caption(f"エラー詳細: {str(e)}")
+                # 具体的な解決策を提示
+                st.error("AIとの通信に一時的な乱れがあります。")
+                st.info("解決策：Google AI Studioで『新しいAPIキー』を作り直し、Secretsに貼り直してみてください。それが一番確実な方法です。")
+                st.caption(f"技術詳細: {str(e)}")
 
-st.markdown("<div style='text-align: center; margin-top: 50px; color: #888; font-size: 0.8em;'>一念三千 診断所</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align: center; margin-top: 50px; color: #888; font-size: 0.8em;'>一念三千 診断所</div>",
