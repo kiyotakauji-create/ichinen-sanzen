@@ -7,24 +7,23 @@ import google.generativeai as genai
 try:
     # SecretsからAPIキーを取得
     GOOGLE_API_KEY = st.secrets["GEMINI_API_KEY"]
+    # 最新の通信ルール(v1)を指定して設定
     genai.configure(api_key=GOOGLE_API_KEY)
 except Exception as e:
     st.error("APIキーの設定を確認してください。")
 
-# AIへの深い命令（慈愛に満ちた一念三千の智慧）
+# AIへの深い命令
 system_instruction = """
 あなたは「一念三千」の哲理に精通した、慈愛に満ちたAIカウンセラーです。
-ユーザーの「死にたい」「消えたい」という叫びは、生命状態（十界）が極限まで苦しい証拠ですが、
-仏法ではその一念の中にこそ、最高に輝く「仏の生命」が必ず具わっていると説きます。
-1.【今の境涯を紐解く】: ユーザーの心境に寄り添い、今の十界を解説。
-2.【一念三千の視点】: 三世間の観点から、その苦しみがどう変化しうるか分析。
-3.【希望への転換】: 煩悩即菩提（苦しみ即幸せ）への温かな一歩を提案。
+ユーザーの「死にたい」という苦しみも、仏法では「煩悩即菩提」として大きな光に変えられると説きます。
+1.【今の境涯を紐解く】: 心境に寄り添い、今の十界を解説。
+2.【一念三千の視点】: 苦しみがどう変化しうるか分析。
+3.【希望への転換】: 温かな一歩を提案。
 """
 
-# モデルの準備
+# モデルの準備（models/ をつけることで、古いbeta版との衝突を避けます）
 model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    system_instruction=system_instruction
+    model_name="models/gemini-1.5-flash"
 )
 
 # ==========================================
@@ -55,18 +54,11 @@ if st.button("一念を診断する"):
     else:
         with st.spinner("深遠な智慧にアクセス中..."):
             try:
-                # 対話の生成
-                response = model.generate_content(user_input)
+                # 命令文とユーザーの想いを結合して送信
+                response = model.generate_content(system_instruction + "\n\nユーザーの悩み：" + user_input)
                 
                 st.markdown(f"""
                 <div class="result-card">
                     <h3 style="color:#f8b500; margin-top:0;">診断結果</h3>
                     <div style="line-height: 1.8; font-size: 1.1em;">{response.text.replace(chr(10), "<br>")}</div>
                 </div>
-                """, unsafe_allow_html=True)
-                
-            except Exception as e:
-                st.error("AIとの通信に一時的な乱れがあります。もう一度ボタンを押すか、APIキーを再確認してください。")
-                st.caption(f"Error details: {str(e)}")
-
-st.markdown("<div style='text-align: center; margin-top: 50px; color: #888; font-size: 0.8em;'>一念三千 診断所</div>", unsafe_allow_html=True)
