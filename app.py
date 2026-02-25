@@ -1,40 +1,71 @@
 import streamlit as st
 import google.generativeai as genai
+import os
 
 # ==========================================
-# 0. ページ設定（これを必ず一番最初に書く！）
+# 0. ページ設定（必ず一番最初に書く決まりです）
 # ==========================================
 st.set_page_config(page_title="一念三千 診断", page_icon="🧘")
 
 # ==========================================
-# 1. 設定エリア
+# 1. APIキーの設定
 # ==========================================
-# SecretsからAPIキーを取得
 try:
-    GOOGLE_API_KEY = st.secrets["GEMINI_API_KEY"]
+    # SecretsからAPIキーを取得
+    if "GEMINI_API_KEY" in st.secrets:
+        GOOGLE_API_KEY = st.secrets["GEMINI_API_KEY"]
+    else:
+        # ローカル環境用（もしあれば）
+        GOOGLE_API_KEY = os.environ.get("GEMINI_API_KEY")
+    
+    if not GOOGLE_API_KEY:
+        st.error("APIキーが見つかりません。StreamlitのSecretsを設定してください。")
+        st.stop()
+        
     genai.configure(api_key=GOOGLE_API_KEY)
-except:
-    st.error("APIキーが設定されていません。Secretsを確認してください。")
+except Exception as e:
+    st.error(f"設定エラー: {e}")
 
-# AIへの深い命令（慈愛に満ちた一念三千の智慧）
+# ==========================================
+# 2. モデルの準備（最強の安全策）
+# ==========================================
+# AIへの命令
 system_instruction = """
 あなたは「一念三千」の哲理に基づき、ユーザーの悩みを救う慈愛のAIカウンセラーです。
 「死にたい」という叫びは、生命が極限まで苦しい証拠ですが、その一念には「仏の生命」が必ず具わっています。
 1.【今の境涯を紐解く】、2.【仏法の分析】、3.【希望への転換】の順で、温かく寄り添う回答をしてください。
 """
 
-# モデルの準備
-try:
-    model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash-latest",  # "latest"をつけるとうまくいくことが多いです
-        system_instruction=system_instruction
-    )
-except:
-    # 万が一FlashがダメならProに切り替える保険
-    model = genai.GenerativeModel("gemini-pro")
+@st.cache_resource
+def get_model():
+    # まず最新のFlashモデルを試す
+    try:
+        model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash-latest",
+            system_instruction=system_instruction
+        )
+        # テストコール（本当に使えるか確認）
+        return model
+    except:
+        pass
+    
+    # ダメなら普通のFlashを試す
+    try:
+        model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash",
+            system_instruction=system_instruction
+        )
+        return model
+    except:
+        pass
+
+    # それでもダメならProモデル（旧安定版）を使う
+    return genai.GenerativeModel("gemini-pro")
+
+model = get_model()
 
 # ==========================================
-# 2. デザイン（癒やしの空間）
+# 3. デザイン & アプリ画面
 # ==========================================
 st.markdown("""
     <style>
@@ -45,9 +76,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# 3. アプリ画面
-# ==========================================
 st.title("🧘 一念三千 診断")
 st.markdown("<div style='text-align: center; margin-bottom: 20px;'>内なる三千世界を、AIが共に照らします。</div>", unsafe_allow_html=True)
 
@@ -70,7 +98,7 @@ if st.button("一念を診断する"):
                 """, unsafe_allow_html=True)
                 
             except Exception as e:
-                st.error("AIとの接続を再構成中です。30秒後に再度お試しください。")
+                st.error("エラーが発生しました。しばらく待ってから再試行してください。")
                 st.caption(f"Debug Info: {str(e)}")
 
 st.markdown("<div style='text-align: center; margin-top: 50px; color: #888; font-size: 0.8em;'>一念三千 診断所</div>", unsafe_allow_html=True)
