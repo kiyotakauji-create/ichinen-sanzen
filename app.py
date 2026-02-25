@@ -45,8 +45,8 @@ def generate_response(user_text):
     except Exception:
         pass # エラーが出たら次へ
 
-    # 【作戦2】ダメなら旧型の Pro モデルを試す（命令文なし）
-    # ※ gemini-pro は system_instruction に対応していないため外します
+    # 【作戦2】ダメなら旧型の Pro モデルを試す
+    # ※ gemini-pro は system_instruction に対応していない場合があるため、プロンプトに結合します
     try:
         model = genai.GenerativeModel("gemini-pro")
         # 命令文の代わりに、プロンプトに直接指示を埋め込む
@@ -70,4 +70,32 @@ st.markdown("""
     .stApp { background: linear-gradient(135deg, #0f2027 0%, #203a43 100%); color: white; }
     h1 { color: #f8b500 !important; text-align: center; text-shadow: 0 0 10px rgba(248,181,0,0.5); }
     .stButton>button { background-color: #d3381c !important; color: white !important; width: 100%; border-radius: 20px; border: none; height: 3.5em; font-weight: bold; }
-    .result-card { background-color: rgba(255, 255, 255, 0.1); padding: 25px; border-radius: 15px; border-left: 5px solid #f8b500; backdrop-filter:
+    .result-card { background-color: rgba(255, 255, 255, 0.1); padding: 25px; border-radius: 15px; border-left: 5px solid #f8b500; backdrop-filter: blur(10px); }
+    </style>
+""", unsafe_allow_html=True)
+
+st.title("🧘 一念三千 診断")
+st.markdown("<div style='text-align: center; margin-bottom: 20px;'>内なる三千世界を、AIが共に照らします。</div>", unsafe_allow_html=True)
+
+user_input = st.text_area("今の想いを、ありのままに書き出してください", height=150)
+
+if st.button("一念を診断する"):
+    if not user_input:
+        st.warning("お気持ちを入力してください。")
+    else:
+        with st.spinner("深遠な智慧にアクセス中..."):
+            # ここで自動修復ロジックを呼び出す
+            result_text = generate_response(user_input)
+            
+            # 結果表示
+            if "エラーが発生しました" in result_text:
+                st.error(result_text) # エラーの場合
+            else:
+                st.markdown(f"""
+                <div class="result-card">
+                    <h3 style="color:#f8b500; margin-top:0;">診断結果</h3>
+                    <div style="line-height: 1.8; font-size: 1.1em;">{result_text.replace(chr(10), "<br>")}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+st.markdown("<div style='text-align: center; margin-top: 50px; color: #888; font-size: 0.8em;'>一念三千 診断所</div>", unsafe_allow_html=True)
