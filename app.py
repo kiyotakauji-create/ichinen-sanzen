@@ -3,7 +3,7 @@ import google.generativeai as genai
 import os
 
 # ==========================================
-# 0. ページ設定（必ず一番最初に書く！）
+# 0. ページ設定
 # ==========================================
 st.set_page_config(page_title="一念三千 診断", page_icon="🧘")
 
@@ -25,42 +25,22 @@ except Exception as e:
     st.error(f"設定エラー: {e}")
 
 # ==========================================
-# 2. ロジック関数（自動修復機能付き）
+# 2. モデルの準備
 # ==========================================
-def generate_response(user_text):
-    # AIへの命令
-    system_instruction = """
-    あなたは「一念三千」の哲理に基づき、ユーザーの悩みを救う慈愛のAIカウンセラーです。
-    「死にたい」という叫びは、生命が極限まで苦しい証拠ですが、その一念には「仏の生命」が必ず具わっています。
-    1.【今の境涯を紐解く】、2.【仏法の分析】、3.【希望への転換】の順で、温かく寄り添う回答をしてください。
-    """
+system_instruction = """
+あなたは「一念三千」の哲理に基づき、ユーザーの悩みを救う慈愛のAIカウンセラーです。
+「死にたい」という叫びは、生命が極限まで苦しい証拠ですが、その一念には「仏の生命」が必ず具わっています。
+1.【今の境涯を紐解く】、2.【仏法の分析】、3.【希望への転換】の順で、温かく寄り添う回答をしてください。
+"""
 
-    # 【作戦1】まずは本命の Flash モデルを試す
-    try:
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
-            system_instruction=system_instruction
-        )
-        return model.generate_content(user_text).text
-    except Exception:
-        pass # エラーが出たら次へ
-
-    # 【作戦2】ダメなら旧型の Pro モデルを試す
-    # ※ gemini-pro は system_instruction に対応していない場合があるため、プロンプトに結合します
-    try:
-        model = genai.GenerativeModel("gemini-pro")
-        # 命令文の代わりに、プロンプトに直接指示を埋め込む
-        prompt = system_instruction + "\n\nユーザーの悩み:\n" + user_text
-        return model.generate_content(prompt).text
-    except Exception as e:
-        # 【作戦3】それでもダメなら、何が使えるか調査して表示する
-        error_msg = f"エラーが発生しました。\n詳細: {str(e)}\n\n"
-        try:
-            available_models = [m.name for m in genai.list_models()]
-            error_msg += "【使用可能なモデル一覧】\n" + "\n".join(available_models)
-        except:
-            error_msg += "モデル一覧の取得にも失敗しました。"
-        return error_msg
+try:
+    # ログに見つかった最新モデル「gemini-2.5-flash」を指定します
+    model = genai.GenerativeModel(
+        model_name="gemini-2.5-flash",
+        system_instruction=system_instruction
+    )
+except Exception as e:
+    st.error(f"モデル読み込みエラー: {e}")
 
 # ==========================================
 # 3. アプリ画面
@@ -84,18 +64,16 @@ if st.button("一念を診断する"):
         st.warning("お気持ちを入力してください。")
     else:
         with st.spinner("深遠な智慧にアクセス中..."):
-            # ここで自動修復ロジックを呼び出す
-            result_text = generate_response(user_input)
-            
-            # 結果表示
-            if "エラーが発生しました" in result_text:
-                st.error(result_text) # エラーの場合
-            else:
+            try:
+                response = model.generate_content(user_input)
                 st.markdown(f"""
                 <div class="result-card">
                     <h3 style="color:#f8b500; margin-top:0;">診断結果</h3>
-                    <div style="line-height: 1.8; font-size: 1.1em;">{result_text.replace(chr(10), "<br>")}</div>
+                    <div style="line-height: 1.8; font-size: 1.1em;">{response.text.replace(chr(10), "<br>")}</div>
                 </div>
                 """, unsafe_allow_html=True)
+            except Exception as e:
+                st.error("エラーが発生しました。")
+                st.caption(f"Error Detail: {e}")
 
 st.markdown("<div style='text-align: center; margin-top: 50px; color: #888; font-size: 0.8em;'>一念三千 診断所</div>", unsafe_allow_html=True)
