@@ -3,7 +3,7 @@ import google.generativeai as genai
 import os
 
 # ==========================================
-# 0. ページ設定（必ず一番最初に書く決まりです）
+# 0. ページ設定
 # ==========================================
 st.set_page_config(page_title="一念三千 診断", page_icon="🧘")
 
@@ -15,11 +15,10 @@ try:
     if "GEMINI_API_KEY" in st.secrets:
         GOOGLE_API_KEY = st.secrets["GEMINI_API_KEY"]
     else:
-        # ローカル環境用（もしあれば）
         GOOGLE_API_KEY = os.environ.get("GEMINI_API_KEY")
     
     if not GOOGLE_API_KEY:
-        st.error("APIキーが見つかりません。StreamlitのSecretsを設定してください。")
+        st.error("APIキーが見つかりません。")
         st.stop()
         
     genai.configure(api_key=GOOGLE_API_KEY)
@@ -27,45 +26,22 @@ except Exception as e:
     st.error(f"設定エラー: {e}")
 
 # ==========================================
-# 2. モデルの準備（最強の安全策）
+# 2. モデルの準備
 # ==========================================
-# AIへの命令
 system_instruction = """
 あなたは「一念三千」の哲理に基づき、ユーザーの悩みを救う慈愛のAIカウンセラーです。
 「死にたい」という叫びは、生命が極限まで苦しい証拠ですが、その一念には「仏の生命」が必ず具わっています。
 1.【今の境涯を紐解く】、2.【仏法の分析】、3.【希望への転換】の順で、温かく寄り添う回答をしてください。
 """
 
-@st.cache_resource
-def get_model():
-    # まず最新のFlashモデルを試す
-    try:
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash-latest",
-            system_instruction=system_instruction
-        )
-        # テストコール（本当に使えるか確認）
-        return model
-    except:
-        pass
-    
-    # ダメなら普通のFlashを試す
-    try:
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
-            system_instruction=system_instruction
-        )
-        return model
-    except:
-        pass
-
-    # それでもダメならProモデル（旧安定版）を使う
-    return genai.GenerativeModel("gemini-pro")
-
-model = get_model()
+# ここを一番シンプルな記述に戻しました
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    system_instruction=system_instruction
+)
 
 # ==========================================
-# 3. デザイン & アプリ画面
+# 3. アプリ画面
 # ==========================================
 st.markdown("""
     <style>
@@ -87,18 +63,16 @@ if st.button("一念を診断する"):
     else:
         with st.spinner("深遠な智慧にアクセス中..."):
             try:
-                # 対話の生成
                 response = model.generate_content(user_input)
-                
                 st.markdown(f"""
                 <div class="result-card">
                     <h3 style="color:#f8b500; margin-top:0;">診断結果</h3>
                     <div style="line-height: 1.8; font-size: 1.1em;">{response.text.replace(chr(10), "<br>")}</div>
                 </div>
                 """, unsafe_allow_html=True)
-                
             except Exception as e:
-                st.error("エラーが発生しました。しばらく待ってから再試行してください。")
-                st.caption(f"Debug Info: {str(e)}")
+                st.error("エラーが発生しました。")
+                st.info("APIキーや通信状態を確認してください。")
+                st.caption(f"Error Detail: {e}")
 
 st.markdown("<div style='text-align: center; margin-top: 50px; color: #888; font-size: 0.8em;'>一念三千 診断所</div>", unsafe_allow_html=True)
