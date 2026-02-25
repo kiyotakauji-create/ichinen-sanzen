@@ -62,3 +62,10 @@ if st.button("一念を診断する"):
                     <h3 style="color:#f8b500; margin-top:0;">診断結果</h3>
                     <div style="line-height: 1.8; font-size: 1.1em;">{response.text.replace(chr(10), "<br>")}</div>
                 </div>
+                """, unsafe_allow_html=True)
+                
+            except Exception as e:
+                st.error("AIが回答を生成中です。もう一度ボタンを押してみてください。")
+                st.caption(f"Debug Info: {str(e)}")
+
+st.markdown("<div style='text-align: center; margin-top: 50px; color: #888; font-size: 0.8em;'>一念三千 診断所</div>", unsafe_allow_html=True)
